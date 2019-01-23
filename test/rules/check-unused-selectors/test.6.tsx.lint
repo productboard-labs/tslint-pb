@@ -1,0 +1,8 @@
+import SuperStore, { NotADependency } from 'store/some';
+import { show, hide } from 'selectors/some';
+
+export default select([show, hide], () => ({
+  a: show(),
+  b: hide(),
+  c: NotADependency()
+}))

@@ -23,22 +23,40 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 const getImports = (node: ts.ImportDeclaration) => {
   const importClause = node.importClause;
+  let collectedIdentifiers: Array<string> = [];
 
-  if (!importClause) return [];
+  if (!importClause) return collectedIdentifiers;
 
   if (importClause.name) {
-    return [importClause.name.text];
+    collectedIdentifiers = [importClause.name.text];
   }
 
-  return (importClause.namedBindings as ts.NamedImports).elements.map(
-    element => element.name.text
-  );
+  const namedImports = importClause.namedBindings as ts.NamedImports;
+
+  return [
+    ...collectedIdentifiers,
+    ...(namedImports
+      ? namedImports.elements.map(element => element.name.text)
+      : [])
+  ];
 };
 
 const addToWatchedIdentifiers = (
   node: ts.ImportDeclaration,
-  type: "store" | "selector"
+  type: "store" | "selector",
+  onlyDefault?: boolean
 ) => {
+  if (onlyDefault) {
+    const importClause = node.importClause;
+
+    if (!importClause) return;
+    if (!importClause.name) return;
+
+    watchedIdentifiers[importClause.name.text] = type;
+
+    return;
+  }
+
   for (const i of getImports(node)) {
     watchedIdentifiers[i] = type;
   }
@@ -157,7 +175,7 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
     const moduleName = (node.moduleSpecifier as ts.StringLiteral).text;
 
     if (moduleName.match(/store/i)) {
-      addToWatchedIdentifiers(node, "store");
+      addToWatchedIdentifiers(node, "store", true);
     }
 
     if (moduleName.match(/selectors/i)) {
