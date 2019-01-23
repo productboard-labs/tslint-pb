@@ -4,6 +4,8 @@ There are highly experimental rules we are trying to use in our daily life to he
 
 ## Rules
 
+> 💡 All the rules consume `reference: string` configuration for custom message
+
 ### check-unused-selectors
 
 This rule checks if ours connect (Flux) or selector implementation has all required dependencies, or if there is some dependency unused. If you are wondering, how this works in real life just ping us – [we are hiring.](https://www.productboard.com/careers/senior-javascript-developer-react-js/) 🤓
