@@ -64,7 +64,7 @@ const addToWatchedIdentifiers = (
 
 // The walker takes care of all the work.
 class NoUnusedSelectorsWalker extends Lint.RuleWalker {
-  referenceText: string;
+  private referenceText: string;
 
   constructor(sourceFile, options) {
     super(sourceFile, options);

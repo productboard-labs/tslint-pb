@@ -1,0 +1,38 @@
+{
+  "rules": {
+    "import-group-order": [
+      true,
+      {
+        "convention": [
+          "react",
+          "node_modules",
+          "libs",
+          null,
+          "actions",
+          "stores",
+          "selectors",
+          null,
+          "components",
+          null,
+          "constants",
+          null,
+          "styles",
+          null,
+          "undefined"
+        ],
+        "recognizer": {
+          "react": "^react$",
+          "node_modules": "^[^/]*$",
+          "libs": "libs/.*",
+          "actions": { "regex": "actions?", "flags": "i" },
+          "stores": { "regex": "stores?", "flags": "i" },
+          "selectors": { "regex": "selectors?", "flags": "i" },
+          "components": ["components?/", ".*\\.react$"],
+          "constants": "constants?.*",
+          "styles": ".*\\.styles$"
+        },
+        "reference": "This is reference."
+      }
+    ]
+  }
+}
