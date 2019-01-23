@@ -3,5 +3,5 @@ import { show, hide } from 'selectors/some';
 export default connect([show], () => ({
   a: show(),
   b: hide(),
-     ~~~~    [You forgot to listen for the "hide" dependency!]
+     ~~~~    [You forgot to listen for the "hide" dependency! For better understanding check the documentation.]
 }))(component);

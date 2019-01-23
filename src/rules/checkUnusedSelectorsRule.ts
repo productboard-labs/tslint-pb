@@ -10,7 +10,7 @@ const watchedIdentifiers: { [key: string]: "store" | "selector" } = {};
 
 export class Rule extends Lint.Rules.AbstractRule {
   public static NOT_LISTENING = (name: string) =>
-    `You forgot to listen for the "${name}" dependency`;
+    `You forgot to listen for the "${name}" dependency!`;
   public static UNUSED_SELECTOR = (name: string) =>
     `The "${name}" dependency  is unused. This has performance impact!`;
 
@@ -64,6 +64,28 @@ const addToWatchedIdentifiers = (
 
 // The walker takes care of all the work.
 class NoUnusedSelectorsWalker extends Lint.RuleWalker {
+  referenceText: string;
+
+  constructor(sourceFile, options) {
+    super(sourceFile, options);
+
+    const configuration = { ...options.ruleArguments[0] } as {
+      reference?: string;
+    };
+
+    this.referenceText = configuration.reference || "";
+  }
+
+  private addIssue(node: ts.Node, text: string) {
+    this.addFailure(
+      this.createFailure(
+        node.getStart(),
+        node.getWidth(),
+        text + (this.referenceText ? ` ${this.referenceText}` : "")
+      )
+    );
+  }
+
   private checkSelectors(node: ts.CallExpression) {
     const [selectorsNode, implementationNode] = node.arguments;
 
@@ -83,13 +105,7 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
         usedSelectors.push(identifier);
 
         if (watchedIdentifiers[identifier] && !selectors.includes(identifier)) {
-          this.addFailure(
-            this.createFailure(
-              node.getStart(),
-              node.getWidth(),
-              Rule.NOT_LISTENING(identifier)
-            )
-          );
+          this.addIssue(node, Rule.NOT_LISTENING(identifier));
         }
       };
 
@@ -157,12 +173,9 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
         );
 
         if (unusedSelectorsNode) {
-          this.addFailure(
-            this.createFailure(
-              unusedSelectorsNode.getStart(),
-              unusedSelectorsNode.getWidth(),
-              Rule.UNUSED_SELECTOR(unusedSelector)
-            )
+          this.addIssue(
+            unusedSelectorsNode,
+            Rule.UNUSED_SELECTOR(unusedSelector)
           );
         }
       });

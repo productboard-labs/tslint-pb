@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "check-unused-selectors": {
+      "severity": "error",
+      "options": {
+        "reference": "For better understanding check the documentation."
+      }
+    }
+  }
+}

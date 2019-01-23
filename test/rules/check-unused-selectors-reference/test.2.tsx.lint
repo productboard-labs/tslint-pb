@@ -1,0 +1,6 @@
+import { show, hide } from 'selectors/some';
+
+export default connect([show, hide], () => ({
+                              ~~~~            [The "hide" dependency  is unused. This has performance impact! For better understanding check the documentation.]
+  a: show(),
+}))(component);
