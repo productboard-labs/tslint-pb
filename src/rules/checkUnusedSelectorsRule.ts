@@ -79,6 +79,21 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
         let identifier: string;
         let identifierNode: ts.Node;
 
+        /**
+         * This gonna cover case like:
+         * const something = debug ? Store.someMethod : Another.someMethod;
+         */
+        if (
+          startNode.kind === ts.SyntaxKind.PropertyAccessExpression &&
+          (startNode as ts.PropertyAccessExpression).expression.kind ===
+            ts.SyntaxKind.Identifier
+        ) {
+          identifier = ((startNode as ts.PropertyAccessExpression)
+            .expression as ts.Identifier).text as string;
+
+          addToUsed(startNode, identifier);
+        }
+
         if (startNode.kind === ts.SyntaxKind.CallExpression) {
           (startNode as ts.CallExpression).arguments.map(element => {
             if (element.kind !== ts.SyntaxKind.PropertyAccessExpression) return;

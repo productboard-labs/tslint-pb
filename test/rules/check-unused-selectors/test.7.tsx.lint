@@ -1,0 +1,12 @@
+import SuperStore, { NotADependency } from 'store/some';
+import { show, hide } from 'selectors/some';
+
+export default select([show, hide, SuperStore], () => {
+  const swag = SuperStore.magic;
+
+  return {
+    a: show(),
+    b: hide(),
+    c: swag(),
+  }
+})
