@@ -65,6 +65,7 @@ const addToWatchedIdentifiers = (
 type Configuration = {
   reference: string;
 };
+
 // The walker takes care of all the work.
 class NoUnusedSelectorsWalker extends Lint.RuleWalker {
   private configuration: Configuration;

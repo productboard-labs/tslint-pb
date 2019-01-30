@@ -15,3 +15,10 @@ select(
   ],
   () => {},
 )
+
+select(
+  [
+    BStore, AStore, ...weirdMagic,
+  ],
+  () => {},
+)
