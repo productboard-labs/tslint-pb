@@ -1,0 +1,17 @@
+connect(
+  [
+    AlonglonglongStore,
+    BlonglonglongStore,
+    getLongLongLongA,
+    getLongLongLongB,
+    getLongLongLongC,
+  ],
+  () => {},
+)
+
+select(
+  [
+    AStore, getA,
+  ],
+  () => {},
+)
