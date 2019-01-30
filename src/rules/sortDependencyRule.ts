@@ -55,41 +55,46 @@ class SortFluxDependencies extends Lint.RuleWalker {
       selectorsNode.kind === ts.SyntaxKind.ArrayLiteralExpression &&
       implementationNode.kind === ts.SyntaxKind.ArrowFunction
     ) {
+      // let's apply this rule only on "clean" dependency array. Just the Identifiers, no spreads or magic like that.
+      if (
+        !(selectorsNode as ts.ArrayLiteralExpression).elements.every(
+          node => node.kind === ts.SyntaxKind.Identifier
+        )
+      ) {
+        return;
+      }
+
       const dependencyNodes = (selectorsNode as ts.ArrayLiteralExpression).elements.filter(
-        a => a.kind === ts.SyntaxKind.Identifier
+        node => node.kind === ts.SyntaxKind.Identifier
       ) as Array<ts.Identifier>;
 
       const sortedImportsIdentifiers = [...dependencyNodes]
         .map(node => node.text)
         .sort();
 
-      let fixer: Lint.Replacement | undefined;
+      const indentation = getIndentation(
+        dependencyNodes[0],
+        this.getSourceFile()
+      );
+
+      // Let's help prettier a bit to write nodes in line or in block
+      let formatedSortedIdentifiers;
       if (
-        dependencyNodes.every(node => node.kind === ts.SyntaxKind.Identifier)
+        sortedImportsIdentifiers.join().length >
+        this.configuration.maxLineLength
       ) {
-        const indentation = getIndentation(
-          dependencyNodes[0],
-          this.getSourceFile()
+        formatedSortedIdentifiers = sortedImportsIdentifiers.join(
+          `,\n${indentation}`
         );
-
-        let formatedSortedIdentifiers;
-        if (
-          sortedImportsIdentifiers.join().length >
-          this.configuration.maxLineLength
-        ) {
-          formatedSortedIdentifiers = sortedImportsIdentifiers.join(
-            `,\n${indentation}`
-          );
-        } else {
-          formatedSortedIdentifiers = sortedImportsIdentifiers.join(`, `);
-        }
-
-        fixer = Lint.Replacement.replaceFromTo(
-          dependencyNodes[0].getStart(),
-          dependencyNodes[dependencyNodes.length - 1].getEnd(),
-          formatedSortedIdentifiers
-        );
+      } else {
+        formatedSortedIdentifiers = sortedImportsIdentifiers.join(`, `);
       }
+
+      const fixer = Lint.Replacement.replaceFromTo(
+        dependencyNodes[0].getStart(),
+        dependencyNodes[dependencyNodes.length - 1].getEnd(),
+        formatedSortedIdentifiers
+      );
 
       for (let i = 0; i <= dependencyNodes.length; i++) {
         if (dependencyNodes[i].text !== sortedImportsIdentifiers[i]) {
