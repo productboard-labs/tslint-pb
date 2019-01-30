@@ -44,7 +44,7 @@ type Configuration = {
       | { regex: string; flags: string }
       | Array<{ regex: string; flags: string }>;
   };
-  reference?: string;
+  reference: string;
 };
 
 function isAbsolute(text) {
@@ -146,15 +146,17 @@ export class Rule extends Lint.Rules.AbstractRule {
 // The walker takes care of all the work.
 class SortedImports extends Lint.RuleWalker {
   private imports: ImportsContainer;
-  private referenceText: string;
-  private configuration;
+  private configuration: Configuration;
   private importDefinitionFinished = false;
   private hasCriticalError = false;
 
   constructor(sourceFile, options) {
     super(sourceFile, options);
 
-    const configuration = { ...options.ruleArguments[0] } as Configuration;
+    const configuration = {
+      reference: "",
+      ...options.ruleArguments[0]
+    } as Configuration;
 
     if (!configuration) throw new Error("Config has not been found!");
 
@@ -195,7 +197,6 @@ class SortedImports extends Lint.RuleWalker {
     }
 
     this.imports = new ImportsContainer(sourceFile.text, configuration);
-    this.referenceText = configuration.reference || "";
     this.configuration = configuration;
   }
 
@@ -204,7 +205,10 @@ class SortedImports extends Lint.RuleWalker {
       this.createFailure(
         node.getStart(),
         node.getWidth(),
-        text + (this.referenceText ? ` ${this.referenceText}` : ""),
+        text +
+          (this.configuration.reference
+            ? ` ${this.configuration.reference}`
+            : ""),
         fix
       )
     );

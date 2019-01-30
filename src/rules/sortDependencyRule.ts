@@ -97,7 +97,10 @@ class SortFluxDependencies extends Lint.RuleWalker {
             this.createFailure(
               dependencyNodes[i].getStart(),
               dependencyNodes[i].getWidth(),
-              Rule.ERROR + this.configuration.reference,
+              Rule.ERROR +
+                (this.configuration.reference
+                  ? ` ${this.configuration.reference}`
+                  : ""),
               fixer
             )
           );

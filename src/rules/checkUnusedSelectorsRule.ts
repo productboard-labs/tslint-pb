@@ -62,18 +62,22 @@ const addToWatchedIdentifiers = (
   }
 };
 
+type Configuration = {
+  reference: string;
+};
 // The walker takes care of all the work.
 class NoUnusedSelectorsWalker extends Lint.RuleWalker {
-  private referenceText: string;
+  private configuration: Configuration;
 
   constructor(sourceFile, options) {
     super(sourceFile, options);
 
-    const configuration = { ...options.ruleArguments[0] } as {
-      reference?: string;
-    };
+    const configuration = {
+      reference: "",
+      ...options.ruleArguments[0]
+    } as Configuration;
 
-    this.referenceText = configuration.reference || "";
+    this.configuration = configuration;
   }
 
   private addIssue(node: ts.Node, text: string) {
@@ -81,7 +85,10 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
       this.createFailure(
         node.getStart(),
         node.getWidth(),
-        text + (this.referenceText ? ` ${this.referenceText}` : "")
+        text +
+          (this.configuration.reference
+            ? ` ${this.configuration.reference}`
+            : "")
       )
     );
   }
