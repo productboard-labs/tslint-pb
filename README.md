@@ -115,6 +115,7 @@ This rule checks if all connect (Flux) or selector dependencies are sorted alpha
     "sort-flux-dependencies": [
       true,
       {
+        "maxLineLength": "For formatting purposes",
         "reference": "Optional text to explain the error"
       }
     ]
