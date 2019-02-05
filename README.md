@@ -1,6 +1,6 @@
 # Productboard's TSlint Rules
 
-There are highly experimental rules we are trying to use in our daily life to help maintain code more effectively. Because the the rules are tied to our codebase it will be probably very difficult to use them in your project. However, you can definitely take a look! 💪
+These are highly experimental rules we are trying to use in our daily life to help maintain code more effectively. Because the rules are tied to our codebase, it will probably be very difficult to use them in your project. However, you can definitely take a look! 💪
 
 ## Rules
 
@@ -8,7 +8,7 @@ There are highly experimental rules we are trying to use in our daily life to he
 
 ### check-unused-selectors
 
-This rule checks if ours connect (Flux) or selector implementation has all required dependencies, or if there is some dependency unused. If you are wondering, how this works in real life just ping us – [we are hiring.](https://www.productboard.com/careers/senior-javascript-developer-react-js/) 🤓
+This rule checks if our connect (Flux) or selector implementation has all required dependencies, or if there is some dependency unused. If you are wondering, how this works in real life just ping us – [we are hiring.](https://www.productboard.com/careers/senior-javascript-developer-react-js/) 🤓
 
 ### Configuration
 
@@ -41,7 +41,7 @@ export default compose(connect([show], () => ({
 
 > 💡 This rule has fixer
 
-This rule needs configuration to proper usage. Basically, you are able to set convention how to group and sort imports based on the naming convention of imports. Check it out tests for the real-case usage.
+This rule needs configuration for proper usage. Basically, you are able to set convention on how to group and sort imports based on the naming convention of imports. Check it out tests for the real-case usage.
 
 ### Configuration
 
@@ -101,6 +101,41 @@ import { k, l } from "constants/b";
 import { m } from "constants/m";
 import { n } from "constants/p";
 import { o } from "modules/views/constants/v";
+```
+
+### sort-flux-dependencies
+
+This rule checks if all connect (Flux) or selector dependencies are sorted alphabetically.
+
+### Configuration
+
+```json
+{
+  "rules": {
+    "sort-flux-dependencies": [
+      true,
+      {
+        "reference": "Optional text to explain the error"
+      }
+    ]
+  }
+}
+```
+
+### Example
+
+```text
+connect(
+  [
+    AlonglonglongStore,
+    getLongLongLongA,
+    ~~~~~~~~~~~~~~~~  [Dependency array is not sorted correctly!]
+    BlonglonglongStore,
+    getLongLongLongB,
+    getLongLongLongC,
+  ],
+  () => {},
+)
 ```
 
 ## Install
