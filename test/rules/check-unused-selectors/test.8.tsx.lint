@@ -1,0 +1,13 @@
+import { show, hide } from 'selectors/some';
+
+export default connect([show, hide, hide], () => ({
+                                    ~~~~            [The "hide" dependency is already defined.]
+  a: show(),
+  b: hide(),
+}))(component);
+
+export default connect([show, hide, foo], () => ({
+  a: show(),
+  b: hide(),
+  f: foo(),
+}))(component);

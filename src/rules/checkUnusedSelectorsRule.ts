@@ -13,6 +13,8 @@ export class Rule extends Lint.Rules.AbstractRule {
     `You forgot to listen for the "${name}" dependency!`;
   public static UNUSED_SELECTOR = (name: string) =>
     `The "${name}" dependency  is unused. This has performance impact!`;
+  public static ALREADY_DEFINED = (name: string) =>
+    `The "${name}" dependency is already defined.`;
 
   public apply(sourceFile: ts.SourceFile): Array<Lint.RuleFailure> {
     return this.applyWithWalker(
@@ -101,9 +103,10 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
       selectorsNode.kind === ts.SyntaxKind.ArrayLiteralExpression &&
       implementationNode.kind === ts.SyntaxKind.ArrowFunction
     ) {
-      const selectors = (selectorsNode as ts.ArrayLiteralExpression).elements
-        .filter(a => a.kind === ts.SyntaxKind.Identifier)
-        .map(element => (element as ts.Identifier).text);
+      const selectorsNodesIdentifiers = (selectorsNode as ts.ArrayLiteralExpression).elements.filter(
+        a => a.kind === ts.SyntaxKind.Identifier
+      ) as Array<ts.Identifier>;
+      const selectors = selectorsNodesIdentifiers.map(element => element.text);
 
       const usedSelectors: Array<string> = [];
 
@@ -167,6 +170,16 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
 
         return ts.forEachChild(startNode, cb);
       };
+
+      // Check if dependencies are not defined multiple times
+      const definedSelectors = [];
+      for (let selectorNode of selectorsNodesIdentifiers) {
+        if (!definedSelectors[selectorNode.text]) {
+          definedSelectors[selectorNode.text] = true;
+        } else {
+          this.addIssue(selectorNode, Rule.ALREADY_DEFINED(selectorNode.text));
+        }
+      }
 
       // walk the implementation
       ts.forEachChild(implementationNode, cb);
