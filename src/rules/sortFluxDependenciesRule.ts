@@ -5,6 +5,7 @@
 
 import * as Lint from "tslint";
 import * as ts from "typescript";
+import { IOptions } from "tslint";
 
 export class Rule extends Lint.Rules.AbstractRule {
   public static ERROR = `Dependency array is not sorted correctly!`;
@@ -33,7 +34,7 @@ class SortFluxDependencies extends Lint.RuleWalker {
     maxLineLength: number;
   };
 
-  constructor(sourceFile, options) {
+  constructor(sourceFile: ts.SourceFile, options: IOptions) {
     super(sourceFile, options);
 
     const configuration = {

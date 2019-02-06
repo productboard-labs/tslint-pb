@@ -4,11 +4,12 @@
  */
 import * as Lint from "tslint";
 import * as ts from "typescript";
+import { IOptions } from "tslint";
 
 const ERROR = {
   LINE_ABOVE: "Insert line above.",
-  REMOVE_EXTRA_LINE_ABOVE: n => `Remove ${n} extra line above.`,
-  UNEXPECTED_SEPARATOR: n =>
+  REMOVE_EXTRA_LINE_ABOVE: (n: number) => `Remove ${n} extra line above.`,
+  UNEXPECTED_SEPARATOR: (n: number) =>
     `Unexpected group separator, remove ${n} extra line above.`,
   ABSOLUTE_FIRST: "Absolute path should come first.",
   WRONG_ORDER: "Wrong order of the group.",
@@ -47,15 +48,23 @@ type Configuration = {
   reference: string;
 };
 
-function isAbsolute(text) {
+type NormalizedConfiguration = {
+  convention: Array<string | null>;
+  recognizer: {
+    [key: string]: Array<RegExp>;
+  };
+  reference: string;
+};
+
+function isAbsolute(text: string) {
   return text[0] === ".";
 }
 
-function countGroupingSeparator(text) {
+function countGroupingSeparator(text: string) {
   return text.split(/\n/).filter(a => !a).length;
 }
 
-function isThereGroupingSeparator(text) {
+function isThereGroupingSeparator(text: string) {
   return countGroupingSeparator(text) === 2;
 }
 
@@ -150,7 +159,7 @@ class SortedImports extends Lint.RuleWalker {
   private importDefinitionFinished = false;
   private hasCriticalError = false;
 
-  constructor(sourceFile, options) {
+  constructor(sourceFile: ts.SourceFile, options: IOptions) {
     super(sourceFile, options);
 
     const configuration = {
@@ -165,39 +174,49 @@ class SortedImports extends Lint.RuleWalker {
     }
 
     try {
-      configuration.recognizer = Object.entries(configuration.recognizer)
-        .map(([k, r]) => {
-          if (k === UNDEFINED_KEYWORD) {
-            throw new Error("'undefined' type can't have recognizer!");
-          }
-
-          const makeRegExp = (
-            exp: { flags?: string; regex: string } | string
-          ) => {
-            if (typeof exp === "string") {
-              return new RegExp(exp);
+      const normalizedConfiguration: NormalizedConfiguration = {
+        reference: configuration.reference,
+        convention: configuration.convention,
+        recognizer: Object.entries(configuration.recognizer)
+          .map(([k, r]) => {
+            if (k === UNDEFINED_KEYWORD) {
+              throw new Error("'undefined' type can't have recognizer!");
             }
 
-            const flags = exp.flags || "";
+            const makeRegExp = (
+              exp: { flags?: string; regex: string } | string
+            ) => {
+              if (typeof exp === "string") {
+                return new RegExp(exp);
+              }
 
-            return new RegExp(exp.regex, flags);
-          };
+              const flags = exp.flags || "";
 
-          const strategy = Array.isArray(r) ? r : [r];
+              return new RegExp(exp.regex, flags);
+            };
 
-          return [k, strategy.map(makeRegExp)];
-        })
-        .reduce((acc, [k, r]) => {
-          acc[k as string] = r;
+            const strategy = Array.isArray(r) ? r : [r];
 
-          return acc;
-        }, {});
+            return [k, strategy.map(makeRegExp) as Array<RegExp>];
+          })
+          .reduce(
+            (acc, [k, r]) => {
+              acc[k as string] = r as Array<RegExp>;
+
+              return acc;
+            },
+            {} as { [key: string]: Array<RegExp> }
+          )
+      };
+
+      this.imports = new ImportsContainer(
+        sourceFile.text,
+        normalizedConfiguration
+      );
+      this.configuration = configuration;
     } catch (e) {
       throw new Error("Wrong recognizer format!");
     }
-
-    this.imports = new ImportsContainer(sourceFile.text, configuration);
-    this.configuration = configuration;
   }
 
   private addIssue(node: ts.Node, text?: string, fix?: Lint.Replacement) {
@@ -257,9 +276,9 @@ class ImportsContainer {
   private imports: Array<ImportType["i"]> = [];
   private banner = 0;
   private sourceFile = "";
-  private configuration;
+  private configuration: NormalizedConfiguration;
 
-  constructor(sourceFile, configuration) {
+  constructor(sourceFile: string, configuration: NormalizedConfiguration) {
     this.sourceFile = sourceFile;
     this.configuration = configuration;
   }
@@ -267,7 +286,7 @@ class ImportsContainer {
   private getType(module: string) {
     const recognizer = this.configuration.convention
       .filter(a => a && a !== UNDEFINED_KEYWORD)
-      .map(r => [r, this.configuration.recognizer[r]]) as Array<
+      .map(r => [r, this.configuration.recognizer[r as string]]) as Array<
       [string, Array<RegExp>]
     >;
 
@@ -358,24 +377,29 @@ class ImportsContainer {
       return 0;
     };
 
-    const groupsOfImports = imports.reduce((acc, importObject) => {
-      if (!acc[importObject.type]) {
-        acc[importObject.type] = [importObject];
-      } else {
-        acc[importObject.type].push(importObject);
-      }
+    const groupsOfImports = imports.reduce(
+      (acc, importObject) => {
+        if (!acc[importObject.type]) {
+          acc[importObject.type] = [importObject];
+        } else {
+          acc[importObject.type].push(importObject);
+        }
 
-      return acc;
-    }, {}) as { [key: string]: Array<ImportType["i"]> };
+        return acc;
+      },
+      {} as { [key: string]: Array<ImportType["i"]> }
+    );
 
     const { convention } = this.configuration;
 
     const rewrittenImports: string = convention
       .reduce(
-        (acc: { text: string; blank: boolean }, v: string) => {
-          if (v === null && !acc.blank) {
-            acc.text += "\n";
-            acc.blank = true;
+        (acc: { text: string; blank: boolean }, v: null | string) => {
+          if (v === null) {
+            if (!acc.blank) {
+              acc.text += "\n";
+              acc.blank = true;
+            }
 
             return acc;
           }

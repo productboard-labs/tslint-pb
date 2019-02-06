@@ -5,6 +5,7 @@
 
 import * as ts from "typescript";
 import * as Lint from "tslint";
+import { IOptions } from "tslint";
 
 const watchedIdentifiers: { [key: string]: "store" | "selector" } = {};
 
@@ -72,7 +73,7 @@ type Configuration = {
 class NoUnusedDependenciesWalker extends Lint.RuleWalker {
   private configuration: Configuration;
 
-  constructor(sourceFile, options) {
+  constructor(sourceFile: ts.SourceFile, options: IOptions) {
     super(sourceFile, options);
 
     const configuration = {
@@ -112,7 +113,7 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
 
       const usedDependencies: Array<string> = [];
 
-      const addToUsed = (node, identifier) => {
+      const addToUsed = (node: ts.Node, identifier: string) => {
         if (!identifier) return;
 
         usedDependencies.push(identifier);
@@ -177,7 +178,7 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
       };
 
       // Check if dependencies are not defined multiple times
-      const definedSelectors = [];
+      const definedSelectors: { [key: string]: boolean } = {};
       for (let selectorNode of selectorsNodesIdentifiers) {
         if (!definedSelectors[selectorNode.text]) {
           definedSelectors[selectorNode.text] = true;
