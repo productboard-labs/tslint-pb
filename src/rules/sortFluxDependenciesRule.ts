@@ -96,7 +96,7 @@ class SortFluxDependencies extends Lint.RuleWalker {
         formatedSortedIdentifiers
       );
 
-      for (let i = 0; i <= dependencyNodes.length; i++) {
+      for (let i = 0; i < dependencyNodes.length; i++) {
         if (dependencyNodes[i].text !== sortedImportsIdentifiers[i]) {
           return this.addFailure(
             this.createFailure(

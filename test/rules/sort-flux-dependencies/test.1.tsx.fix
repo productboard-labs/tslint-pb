@@ -22,3 +22,11 @@ select(
   ],
   () => {},
 )
+
+select(
+  [
+    AStore,
+    getA,
+  ],
+  () => {},
+)
