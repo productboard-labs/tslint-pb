@@ -1,6 +1,6 @@
 {
   "rules": {
-    "check-unused-selectors": {
+    "check-unused-flux-dependencies": {
       "severity": "error",
       "options": {
         "reference": "For better understanding check the documentation."

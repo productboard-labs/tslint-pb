@@ -1,7 +1,7 @@
 {
   "rulesDirectory": "./build/rules",
   "rules": {
-    "check-unused-selectors": true,
+    "check-unused-flux-dependencies": true,
     "sort-flux-dependencies": true,
     "import-group-order": [
       true,

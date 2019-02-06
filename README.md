@@ -6,7 +6,7 @@ These are highly experimental rules we are trying to use in our daily life to he
 
 > 💡 All the rules consume `reference: string` configuration for custom message
 
-### check-unused-selectors
+### check-unused-flux-dependencies
 
 This rule checks if our connect (Flux) or selector implementation has all required dependencies, or if there is some dependency unused. If you are wondering, how this works in real life just ping us – [we are hiring.](https://www.productboard.com/careers/senior-javascript-developer-react-js/) 🤓
 
@@ -15,7 +15,7 @@ This rule checks if our connect (Flux) or selector implementation has all requir
 ```json
 {
   "rules": {
-    "check-unused-selectors": [
+    "check-unused-flux-dependencies": [
       true,
       {
         "reference": "Optional text to explain the error"

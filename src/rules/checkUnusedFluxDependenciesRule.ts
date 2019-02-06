@@ -18,7 +18,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 
   public apply(sourceFile: ts.SourceFile): Array<Lint.RuleFailure> {
     return this.applyWithWalker(
-      new NoUnusedSelectorsWalker(sourceFile, this.getOptions())
+      new NoUnusedDependenciesWalker(sourceFile, this.getOptions())
     );
   }
 }
@@ -69,7 +69,7 @@ type Configuration = {
 };
 
 // The walker takes care of all the work.
-class NoUnusedSelectorsWalker extends Lint.RuleWalker {
+class NoUnusedDependenciesWalker extends Lint.RuleWalker {
   private configuration: Configuration;
 
   constructor(sourceFile, options) {
@@ -96,26 +96,31 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
     );
   }
 
-  private checkSelectors(node: ts.CallExpression) {
-    const [selectorsNode, implementationNode] = node.arguments;
+  private checkDependencies(node: ts.CallExpression) {
+    const [dependencyNode, implementationNode] = node.arguments;
 
     if (
-      selectorsNode.kind === ts.SyntaxKind.ArrayLiteralExpression &&
+      dependencyNode.kind === ts.SyntaxKind.ArrayLiteralExpression &&
       implementationNode.kind === ts.SyntaxKind.ArrowFunction
     ) {
-      const selectorsNodesIdentifiers = (selectorsNode as ts.ArrayLiteralExpression).elements.filter(
+      const selectorsNodesIdentifiers = (dependencyNode as ts.ArrayLiteralExpression).elements.filter(
         a => a.kind === ts.SyntaxKind.Identifier
       ) as Array<ts.Identifier>;
-      const selectors = selectorsNodesIdentifiers.map(element => element.text);
+      const dependencies = selectorsNodesIdentifiers.map(
+        element => element.text
+      );
 
-      const usedSelectors: Array<string> = [];
+      const usedDependencies: Array<string> = [];
 
       const addToUsed = (node, identifier) => {
         if (!identifier) return;
 
-        usedSelectors.push(identifier);
+        usedDependencies.push(identifier);
 
-        if (watchedIdentifiers[identifier] && !selectors.includes(identifier)) {
+        if (
+          watchedIdentifiers[identifier] &&
+          !dependencies.includes(identifier)
+        ) {
           this.addIssue(node, Rule.NOT_LISTENING(identifier));
         }
       };
@@ -184,18 +189,18 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
       // walk the implementation
       ts.forEachChild(implementationNode, cb);
 
-      const unusedSelectors = selectors.filter(
-        selector => !usedSelectors.includes(selector)
+      const unusedDependencies = dependencies.filter(
+        dependency => !usedDependencies.includes(dependency)
       );
 
-      unusedSelectors.forEach(unusedSelector => {
-        const unusedSelectorsNode = (selectorsNode as ts.ArrayLiteralExpression).elements.find(
+      unusedDependencies.forEach(unusedSelector => {
+        const unusedDependenciesNode = (dependencyNode as ts.ArrayLiteralExpression).elements.find(
           element => (element as ts.Identifier).text === unusedSelector
         );
 
-        if (unusedSelectorsNode) {
+        if (unusedDependenciesNode) {
           this.addIssue(
-            unusedSelectorsNode,
+            unusedDependenciesNode,
             Rule.UNUSED_SELECTOR(unusedSelector)
           );
         }
@@ -227,7 +232,7 @@ class NoUnusedSelectorsWalker extends Lint.RuleWalker {
       // support select lib and aso connect called as argument, for instance with 'compose'
       (identifier === "select" || identifier === "connect")
     ) {
-      this.checkSelectors(node);
+      this.checkDependencies(node);
     }
 
     super.visitCallExpression(node);
