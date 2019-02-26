@@ -1,0 +1,21 @@
+import { show, hide } from 'selectors/some';
+
+const superSelect = select([show, hide], () => {
+  return {
+    a: show(),
+    b: hide(),
+  }
+})
+
+export default connect([show, hide, superSelect], () => ({
+                                    ~~~~~~~~~~~            [The "superSelect" dependency  is unused. This has performance impact!]
+  a: show(),
+  b: hide(),
+}))(component);
+
+export default connect([show, hide], () => ({
+  a: show(),
+  b: hide(),
+  b: superSelect()
+     ~~~~~~~~~~~   [You forgot to listen for the "superSelect" dependency!]
+}))(component);

@@ -7,7 +7,14 @@ import * as ts from "typescript";
 import * as Lint from "tslint";
 import { IOptions } from "tslint";
 
-const watchedIdentifiers: { [key: string]: "store" | "selector" } = {};
+type TFluxDependency = "store" | "selector";
+
+enum FLUX_FACTORY {
+  CONNECT = "connect",
+  SELECT = "select"
+}
+
+const watchedIdentifiers: { [key: string]: TFluxDependency } = {};
 
 export class Rule extends Lint.Rules.AbstractRule {
   public static NOT_LISTENING = (name: string) =>
@@ -44,9 +51,13 @@ const getImports = (node: ts.ImportDeclaration) => {
   ];
 };
 
-const addToWatchedIdentifiers = (
+const addToWatchedIdentifiers = (name: string, type: TFluxDependency) => {
+  watchedIdentifiers[name] = type;
+};
+
+const addToWatchedIdentifiersFromImportNode = (
   node: ts.ImportDeclaration,
-  type: "store" | "selector",
+  type: TFluxDependency,
   onlyDefault?: boolean
 ) => {
   if (onlyDefault) {
@@ -61,7 +72,7 @@ const addToWatchedIdentifiers = (
   }
 
   for (const i of getImports(node)) {
-    watchedIdentifiers[i] = type;
+    addToWatchedIdentifiers(i, type);
   }
 };
 
@@ -215,11 +226,11 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
     const moduleName = (node.moduleSpecifier as ts.StringLiteral).text;
 
     if (moduleName.match(/store/i)) {
-      addToWatchedIdentifiers(node, "store", true);
+      addToWatchedIdentifiersFromImportNode(node, "store", true);
     }
 
     if (moduleName.match(/selectors/i)) {
-      addToWatchedIdentifiers(node, "selector");
+      addToWatchedIdentifiersFromImportNode(node, "selector");
     }
 
     super.visitImportDeclaration(node);
@@ -230,9 +241,19 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
 
     if (
       node.expression.kind === ts.SyntaxKind.Identifier &&
-      // support select lib and aso connect called as argument, for instance with 'compose'
-      (identifier === "select" || identifier === "connect")
+      (identifier === FLUX_FACTORY.SELECT ||
+        identifier === FLUX_FACTORY.CONNECT)
     ) {
+      if (
+        identifier === FLUX_FACTORY.SELECT &&
+        node.parent.kind === ts.SyntaxKind.VariableDeclaration
+      ) {
+        const selectorName = ((node.parent as ts.VariableDeclaration)
+          .name as ts.Identifier).text;
+
+        addToWatchedIdentifiers(selectorName, "selector");
+      }
+
       this.checkDependencies(node);
     }
 

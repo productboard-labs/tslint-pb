@@ -1,0 +1,15 @@
+import { show, hide } from 'selectors/some';
+
+const anotherSelect = select([show, hide], () => {
+  return {
+    a: show(),
+    b: hide(),
+  }
+})
+
+export default select([], () => {
+  return {
+    magic: anotherSelect(),
+           ~~~~~~~~~~~~~    [You forgot to listen for the "anotherSelect" dependency!]
+  }
+})
