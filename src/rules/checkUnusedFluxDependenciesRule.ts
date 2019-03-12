@@ -89,7 +89,7 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
 
     const configuration = {
       reference: "",
-      ...options.ruleArguments[0]
+      ...(options.ruleArguments && options.ruleArguments[0])
     } as Configuration;
 
     this.configuration = configuration;
@@ -137,59 +137,9 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
         }
       };
 
-      const cb = (startNode: ts.Node): void => {
-        let identifier: string;
-        let identifierNode: ts.Node;
-
-        /**
-         * This gonna cover case like:
-         * const something = debug ? Store.someMethod : Another.someMethod;
-         */
-        if (
-          startNode.kind === ts.SyntaxKind.PropertyAccessExpression &&
-          (startNode as ts.PropertyAccessExpression).expression.kind ===
-            ts.SyntaxKind.Identifier
-        ) {
-          identifier = ((startNode as ts.PropertyAccessExpression)
-            .expression as ts.Identifier).text as string;
-
-          addToUsed(startNode, identifier);
-        }
-
-        if (startNode.kind === ts.SyntaxKind.CallExpression) {
-          (startNode as ts.CallExpression).arguments.map(element => {
-            if (element.kind !== ts.SyntaxKind.PropertyAccessExpression) return;
-            const node = (element as ts.PropertyAccessExpression)
-              .expression as ts.Identifier;
-            if (!node) return;
-            identifier = node.text;
-            addToUsed(node, identifier);
-          });
-
-          identifierNode = (startNode as ts.CallExpression)
-            .expression as ts.Identifier;
-
-          if (identifierNode) {
-            identifier = (identifierNode as ts.Identifier).text as string;
-            addToUsed(identifierNode, identifier);
-          }
-
-          if (identifierNode.kind === ts.SyntaxKind.PropertyAccessExpression) {
-            identifierNode = (identifierNode as ts.PropertyAccessExpression)
-              .expression;
-
-            if (identifierNode) {
-              identifier = (identifierNode as ts.Identifier).text as string;
-              addToUsed(identifierNode, identifier);
-            }
-          }
-        }
-
-        return ts.forEachChild(startNode, cb);
-      };
-
       // Check if dependencies are not defined multiple times
       const definedSelectors: { [key: string]: boolean } = {};
+
       for (let selectorNode of selectorsNodesIdentifiers) {
         if (!definedSelectors[selectorNode.text]) {
           definedSelectors[selectorNode.text] = true;
@@ -197,6 +147,16 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
           this.addIssue(selectorNode, Rule.ALREADY_DEFINED(selectorNode.text));
         }
       }
+
+      const cb = (startNode: ts.Node): void => {
+        if (startNode.kind === ts.SyntaxKind.Identifier) {
+          const identifier = (startNode as ts.Identifier).text;
+
+          addToUsed(startNode, identifier);
+        }
+
+        return ts.forEachChild(startNode, cb);
+      };
 
       // walk the implementation
       ts.forEachChild(implementationNode, cb);

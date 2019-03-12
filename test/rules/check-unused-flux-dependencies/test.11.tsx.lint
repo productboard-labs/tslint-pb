@@ -1,0 +1,31 @@
+import { show } from 'selectors/some';
+
+const superSelect = select([show], () => show());
+
+function superCalculate(dependence){
+  return 0;
+}
+
+export default connect([show, superSelect], () => ({
+  a: superCalculate(superSelect, show)
+}))(component);
+
+export default connect([show], () => ({
+  a: superCalculate(superSelect, show)
+                    ~~~~~~~~~~~        [You forgot to listen for the "superSelect" dependency!]
+}))(component);
+
+export default connect([superSelect], () => ({
+  a: superCalculate(superSelect, show)
+                                 ~~~~        [You forgot to listen for the "show" dependency!]
+}))(component);
+
+export default select([show], () => ({
+  a: superCalculate(superSelect, show)
+                    ~~~~~~~~~~~        [You forgot to listen for the "superSelect" dependency!]
+}))(component);
+
+export default select([superSelect], () => ({
+  a: superCalculate(superSelect, show)
+                                 ~~~~        [You forgot to listen for the "show" dependency!]
+}))(component);
