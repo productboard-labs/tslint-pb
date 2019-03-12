@@ -14,6 +14,7 @@ const ERROR = {
   ABSOLUTE_FIRST: "Absolute path should come first.",
   WRONG_ORDER: "Wrong order of the group.",
   ABZ: "Incorrect alphabetical order, replace the order with the next line.",
+  NAMED_IMPORTS: "Named imports are not sorted in alphabetical order",
   TOGETHER: "All imports has to be defined together.",
   FATAL: "Import convention has been violated. This is auto-fixable."
 };
@@ -22,12 +23,12 @@ const UNDEFINED_KEYWORD = "undefined"; // undefined type in convention array
 
 type ImportType = {
   i: {
+    end: number;
+    start: number;
     node: ts.ImportDeclaration;
     type: string;
     text: string;
     moduleSpecifier: string;
-    end: number;
-    start: number;
   };
   id: number;
 };
@@ -56,6 +57,27 @@ type NormalizedConfiguration = {
   reference: string;
 };
 
+function formatImport(text: ImportType["i"]["text"], moduleSpecifier: string) {
+  const namedImportsRegex = /{(([a-zA-Z0-9]*[, ]?)*)}/;
+
+  const matches = text.match(namedImportsRegex);
+
+  if (!matches) return text;
+
+  const namedImports = matches[1]
+    .split(",")
+    .map(a => a.trim())
+    .sort()
+    .join(", ");
+
+  // with syntax * as there might be moduleSpecifier ommited, so we need to reconstruct it.
+  if (!text.includes("from")) {
+    text += ` from '${moduleSpecifier}'`;
+  }
+
+  return text.replace(namedImportsRegex, `{ ${namedImports} }`);
+}
+
 function isAbsolute(text: string) {
   return text[0] === ".";
 }
@@ -68,6 +90,7 @@ function isThereGroupingSeparator(text: string) {
   return countGroupingSeparator(text) === 2;
 }
 
+// check for order by module specifier and also for order of named imports
 function doesItFollowConvention(
   {
     currentImport,
@@ -80,6 +103,52 @@ function doesItFollowConvention(
   const currentTypeIndex = convention.findIndex(
     type => type === currentImport.i.type
   );
+
+  // check for namedImports
+  const currentImportClause = currentImport.i.node.importClause;
+  if (
+    currentImportClause &&
+    currentImportClause.namedBindings &&
+    ts.isNamedImports(currentImportClause.namedBindings)
+  ) {
+    const namedImportsIdentifiers =
+      currentImportClause.namedBindings.elements &&
+      currentImportClause.namedBindings.elements.map(
+        identifier => identifier.name.text
+      );
+
+    if (namedImportsIdentifiers) {
+      const sortedNamedImportsIdentifiers = [...namedImportsIdentifiers].sort();
+
+      if (
+        namedImportsIdentifiers.join() !== sortedNamedImportsIdentifiers.join()
+      ) {
+        return [false, ERROR.NAMED_IMPORTS];
+      }
+    }
+  }
+
+  // check for namedImports (* as something)
+  const currentModuleSpecifier = currentImport.i.node.moduleSpecifier;
+  if (ts.isBinaryExpression(currentModuleSpecifier)) {
+    const namedImportsIdentifiers =
+      currentModuleSpecifier.right &&
+      // @ts-ignore
+      currentModuleSpecifier.right.properties.map(
+        (identifier: ts.ShorthandPropertyAssignment) => identifier.name.text
+      );
+
+    if (namedImportsIdentifiers) {
+      const sortedNamedImportsIdentifiers = [...namedImportsIdentifiers].sort();
+
+      if (
+        namedImportsIdentifiers.join() !== sortedNamedImportsIdentifiers.join()
+      ) {
+        return [false, ERROR.NAMED_IMPORTS];
+      }
+    }
+  }
+
   if (!previousImport.i) {
     return [true];
   }
@@ -234,25 +303,60 @@ class SortedImports extends Lint.RuleWalker {
   }
 
   public visitSourceFile(startNode: ts.SourceFile) {
-    ts.forEachChild(startNode, node => {
-      if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-        if (this.importDefinitionFinished) {
-          return this.addIssue(node, ERROR.TOGETHER);
+    const checkImport = (
+      node: ts.ImportDeclaration,
+      moduleSpecifier: string
+    ) => {
+      if (this.importDefinitionFinished) {
+        return this.addIssue(node, ERROR.TOGETHER);
+      }
+
+      const currentImport = this.imports.add(node, moduleSpecifier);
+      const previousImport = this.imports.previous(currentImport);
+
+      const [status, error] = doesItFollowConvention(
+        { currentImport, previousImport },
+        this.configuration
+      );
+
+      if (!status) {
+        this.hasCriticalError = true;
+
+        this.addIssue(currentImport.i.node, error);
+      }
+    };
+
+    for (let i = 0; i < startNode.statements.length; i++) {
+      const node = startNode.statements[i];
+      if (ts.isImportDeclaration(node)) {
+        /**
+         * This is tricky due to TS AST:
+         *
+         * import * as something from 'someting'
+         * ^ it's actually not a single isImportDeclaration.
+         *
+         * It's isImportDeclaration, ExpressionStatement (from) and ExpressionStatement (moduleSpecifier)
+         */
+        if (ts.isBinaryExpression(node.moduleSpecifier)) {
+          const index = startNode.statements.indexOf(node);
+          const positionOfModuleSpecifier = 2;
+          const moduleSpecifierIndex = index + positionOfModuleSpecifier;
+
+          const moduleSpecifierNode = startNode.statements[
+            moduleSpecifierIndex
+          ] as ts.ExpressionStatement;
+
+          const moduleSpecifier = (moduleSpecifierNode.expression as ts.StringLiteral)
+            .text;
+
+          checkImport(node, moduleSpecifier);
+
+          // let's jump "from '...'" statement
+          i += positionOfModuleSpecifier;
+          continue;
         }
 
-        const currentImport = this.imports.add(node as ts.ImportDeclaration);
-        const previousImport = this.imports.previous(currentImport);
-
-        const [status, error] = doesItFollowConvention(
-          { currentImport, previousImport },
-          this.configuration
-        );
-
-        if (!status) {
-          this.hasCriticalError = true;
-
-          this.addIssue(currentImport.i.node, error);
-        }
+        checkImport(node, (node.moduleSpecifier as ts.StringLiteral).text);
       } else {
         if (!this.importDefinitionFinished) {
           this.importDefinitionFinished = true;
@@ -266,7 +370,7 @@ class SortedImports extends Lint.RuleWalker {
           }
         }
       }
-    });
+    }
 
     super.visitSourceFile(startNode);
   }
@@ -314,17 +418,17 @@ class ImportsContainer {
     };
   }
 
-  public add(node: ts.ImportDeclaration) {
+  public add(node: ts.ImportDeclaration, moduleSpecifier: string) {
     const start = node.pos;
     const end = node.end;
-    const moduleSpecifier = (node.moduleSpecifier as ts.StringLiteral).text;
+    const text = this.sourceFile.substring(start, end);
 
     const newLength = this.imports.push({
       node,
       start,
       end,
-      text: this.sourceFile.substring(start, end),
       moduleSpecifier,
+      text,
       type: this.getType(moduleSpecifier)
     });
 
@@ -409,7 +513,9 @@ class ImportsContainer {
           acc.text +=
             groupsOfImports[v]
               .sort(sortImports)
-              .map(({ text }) => text.trim())
+              .map(({ text, moduleSpecifier }) => {
+                return formatImport(text, moduleSpecifier).trim();
+              })
               .join("\n") + "\n";
 
           acc.blank = false;

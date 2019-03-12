@@ -1,0 +1,6 @@
+import * as prd, { a, b } from 'blabla/a'
+import { a, b, z } from 'blabla/c'
+import { a, z } from 'blabla/c'
+
+console.log('test')
+

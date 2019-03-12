@@ -1,0 +1,10 @@
+import { z, a, b } from 'blabla/c'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Named imports are not sorted in alphabetical order]
+import * as prd, { b, a } from 'blabla/a'
+~~~~~~~~~~~~~~~~~~~~~~~~~                 [Named imports are not sorted in alphabetical order]
+import { z, a } from 'blabla/c'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Import convention has been violated. This is auto-fixable.]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Named imports are not sorted in alphabetical order]
+
+console.log('test')
+
