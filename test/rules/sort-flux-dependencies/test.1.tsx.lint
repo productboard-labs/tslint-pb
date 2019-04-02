@@ -1,4 +1,9 @@
 connect(
+  [],
+  () => {},
+)
+
+connect(
   [
     AlonglonglongStore,
     getLongLongLongA,

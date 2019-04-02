@@ -73,6 +73,8 @@ class SortFluxDependencies extends Lint.RuleWalker {
         .map(node => node.text)
         .sort();
 
+      if (!dependencyNodes[0]) return;
+
       const indentation = getIndentation(
         dependencyNodes[0],
         this.getSourceFile()
