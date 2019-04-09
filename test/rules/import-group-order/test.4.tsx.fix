@@ -1,11 +1,6 @@
 import a from 'libs/flux/r';
 import { b } from 'libs/flux/r';
-import {
-  c,
-  d,
-  f,
-  g,
-} from 'modules/views/libs/v';
+import { c, d, f, g } from 'modules/views/libs/v';
 
 import { h } from 'stores/u';
 

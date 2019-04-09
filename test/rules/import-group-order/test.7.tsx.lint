@@ -1,0 +1,29 @@
+import React from 'react';
+
+import { action } from '@storybook/addon-actions';
+import { storiesOf } from '@storybook/react';
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Insert line above.]
+
+import {
+~~~~~~~~
+  Subscription,
+~~~~~~~~~~~~~~~
+  SubscriptionSwag,
+~~~~~~~~~~~~~~~~~~~
+  Space,
+~~~~~~~~
+  User,
+~~~~~~~
+} from 'something';
+~~~~~~~~~~~~~~~~~~~ [Named imports are not sorted in alphabetical order]
+
+import B from './B.react';
+import { withSmartKnobs } from '@productboard/storybook-addon-smart-knobs';
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Import convention has been violated. This is auto-fixable.]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Insert line above.]
+
+storiesOf('B', module)
+  .addDecorator(withSmartKnobs)
+  .add('B', () => (
+    <B type="primary"/>
+  ));

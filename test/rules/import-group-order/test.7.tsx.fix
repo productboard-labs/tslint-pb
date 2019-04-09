@@ -1,0 +1,15 @@
+import React from 'react';
+import { Space, Subscription, SubscriptionSwag, User } from 'something';
+
+import { action } from '@storybook/addon-actions';
+
+import B from './B.react';
+
+import { withSmartKnobs } from '@productboard/storybook-addon-smart-knobs';
+import { storiesOf } from '@storybook/react';
+
+storiesOf('B', module)
+  .addDecorator(withSmartKnobs)
+  .add('B', () => (
+    <B type="primary"/>
+  ));

@@ -59,23 +59,26 @@ type NormalizedConfiguration = {
 
 function formatImport(text: ImportType["i"]["text"], moduleSpecifier: string) {
   const namedImportsRegex = /{(([a-zA-Z0-9]*[, ]?)*)}/;
+  // let's omit the code style (new lines) entirely, it's prettier's job
+  let inlinedText = text.replace(/\n/g, "");
 
-  const matches = text.match(namedImportsRegex);
+  const matches = inlinedText.match(namedImportsRegex);
 
   if (!matches) return text;
 
   const namedImports = matches[1]
     .split(",")
     .map(a => a.trim())
+    .filter(a => a)
     .sort()
     .join(", ");
 
   // with syntax * as there might be moduleSpecifier ommited, so we need to reconstruct it.
-  if (!text.includes("from")) {
-    text += ` from '${moduleSpecifier}'`;
+  if (!inlinedText.includes("from")) {
+    inlinedText += ` from '${moduleSpecifier}'`;
   }
 
-  return text.replace(namedImportsRegex, `{ ${namedImports} }`);
+  return inlinedText.replace(namedImportsRegex, `{ ${namedImports} }`);
 }
 
 function isAbsolute(text: string) {
