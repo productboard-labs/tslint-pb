@@ -1,0 +1,7 @@
+import React from 'react';
+
+import { action as b, a } from '@storybook/addon-actions';
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Import convention has been violated. This is auto-fixable.]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Named imports are not sorted in alphabetical order]
+
+console.log('a');

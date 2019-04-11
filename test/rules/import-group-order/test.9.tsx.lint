@@ -1,0 +1,20 @@
+import FeStore, {
+~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+  Filip,
+~~~~~~~~
+~~~~~~~~
+  sortByKarel,
+~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+  sortByPepa,
+~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+  UNSORTED_SROT,
+~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+} from 'something';
+~~~~~~~~~~~~~~~~~~~ [Import convention has been violated. This is auto-fixable.]
+~~~~~~~~~~~~~~~~~~~ [Named imports are not sorted in alphabetical order]
+
+console.log('a');
