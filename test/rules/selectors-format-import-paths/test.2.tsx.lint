@@ -1,0 +1,9 @@
+import yoloselect from 'yoloselect';
+import { internalSelect } from 'libs/select';
+
+yoloselect();
+~~~~~~~~~~~~  [Selector must have at least 2 arguments]
+
+
+internalSelect();
+~~~~~~~~~~~~~~~~  [Selector must have at least 2 arguments]

@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "selectors-format": [
+      true,
+      {
+        "importPaths": {
+          "yoloselect": "yoloselect",
+          "internalSelect": "libs/select"
+        }
+      }
+    ]
+  }
+}

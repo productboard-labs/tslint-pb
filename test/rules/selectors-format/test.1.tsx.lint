@@ -1,0 +1,26 @@
+import select from 'select';
+
+select(
+  [Store],
+  () => {},
+);
+
+select(
+  [Store],
+  () => {},
+  noMemoize,
+);
+
+select(
+  [Store],
+  (a: number) => {
+    return ':)';
+  },
+);
+
+select(
+  [Store, selector],
+  (): boolean => {
+    return true;
+  },
+);

@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "selectors-format": [
+      true,
+      {
+        "importPaths": {
+          "select": "select"
+        }
+      }
+    ]
+  }
+}

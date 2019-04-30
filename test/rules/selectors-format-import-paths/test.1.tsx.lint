@@ -1,0 +1,7 @@
+import yoloselect from 'not-yoloselect-package';
+
+// Doesn't find any error because we don't check `select` here (see `import-paths` option)
+select('this', 'might', 'be', 'totally', 'ok');
+
+// Doesn't find any error because we are not importing from right package (see `import-paths` option)
+yoloselect(1, 2, 3);

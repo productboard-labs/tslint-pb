@@ -1,0 +1,53 @@
+import select from 'select';
+
+select();
+~~~~~~~~  [Selector must have at least 2 arguments]
+select([Store]);
+~~~~~~~~~~~~~~~  [Selector must have at least 2 arguments]
+
+select(
+  [],
+  ~~  [Dependencies shouldn't be empty. You probably want to define plain function instead of a selector?]
+  (): boolean => {
+    return true;
+  },
+);
+
+const FLUX_DEPENDENCIES = [
+  Store,
+  selector,
+]
+
+select(
+  FLUX_DEPENDENCIES,
+  ~~~~~~~~~~~~~~~~~  [Dependencies must be defined as array literal.]
+  () => {},
+);
+
+const func = () => true;
+
+select(
+  [Store],
+  func,
+  ~~~~  [Function must be defined as arrow function literal.]
+  noMemoize,
+);
+
+select(
+  [Store],
+  function () { this.trololo = "dont!!" },
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  [Function must be defined as arrow function literal.]
+);
+
+select(
+  [Store],
+  (a: number = 10) => false,
+   ~~~~~~~~~~~~~~            [Default arguments are forbidden.]
+);
+
+select(
+  [Store],
+  (abc, xyz) => false,
+   ~~~             [All arguments must be typed.]
+        ~~~        [All arguments must be typed.]
+);
