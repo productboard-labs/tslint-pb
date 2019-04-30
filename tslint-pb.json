@@ -3,6 +3,14 @@
   "rules": {
     "check-unused-flux-dependencies": true,
     "sort-flux-dependencies": true,
+    "selectors-format": [
+      true,
+      {
+        "importPaths": {
+          "select": ["libs/flux", "libs/flux/select"]
+        }
+      }
+    ],
     "import-group-order": [
       true,
       {
