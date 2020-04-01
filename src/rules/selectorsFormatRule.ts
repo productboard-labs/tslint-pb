@@ -118,6 +118,13 @@ class SelectorsFormatRule extends Lint.RuleWalker {
         );
       }
 
+      if (paramNode.questionToken) {
+        this.addFailureAtNode(
+          paramNode,
+          this.getFormattedError('Optional arguments are forbidden.'),
+        );
+      }
+
       if (!paramNode.type) {
         this.addFailureAtNode(
           paramNode,

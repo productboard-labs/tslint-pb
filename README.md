@@ -227,6 +227,12 @@ select(
 
 select(
   [Store],
+  (a?: number) => false,
+   ~~~~~~~~~~                [Optional arguments are forbidden.]
+);
+
+select(
+  [Store],
   (abc, xyz) => false,
    ~~~             [All arguments must be typed.]
         ~~~        [All arguments must be typed.]
