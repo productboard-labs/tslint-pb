@@ -6,6 +6,8 @@
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
 
+const VALID_PROPERTY_NAMES = new Set(['noMemo', 'customMemo']);
+
 export class Rule extends Lint.Rules.AbstractRule {
   public apply(sourceFile: ts.SourceFile): Array<Lint.RuleFailure> {
     return this.applyWithWalker(
@@ -41,7 +43,9 @@ class SelectorsFormatRule extends Lint.RuleWalker {
         paths => typeof paths !== 'string' && !Array.isArray(paths),
       )
     ) {
-      throw new Error("Invalid 'import-paths' option format. Check docs for details please.");
+      throw new Error(
+        "Invalid 'import-paths' option format. Check docs for details please.",
+      );
     }
 
     this.configuration = configuration;
@@ -99,7 +103,7 @@ class SelectorsFormatRule extends Lint.RuleWalker {
     }
   }
 
-  private checkResultFuncNode(resultFuncNode: ts.Node) {
+  private checkResultFuncNode(resultFuncNode: ts.Node, isDefaultSelect: boolean) {
     if (!ts.isArrowFunction(resultFuncNode)) {
       return this.addFailureAtNode(
         resultFuncNode,
@@ -111,17 +115,17 @@ class SelectorsFormatRule extends Lint.RuleWalker {
 
     // check each parameter of function
     resultFuncNode.parameters.forEach(paramNode => {
-      if (paramNode.initializer) {
+      if (isDefaultSelect && paramNode.initializer) {
         this.addFailureAtNode(
           paramNode,
-          this.getFormattedError('Default arguments are forbidden.'),
+          this.getFormattedError('Default arguments are forbidden for default select with auto-memoization.'),
         );
       }
 
-      if (paramNode.questionToken) {
+      if (isDefaultSelect && paramNode.questionToken) {
         this.addFailureAtNode(
           paramNode,
-          this.getFormattedError('Optional arguments are forbidden.'),
+          this.getFormattedError('Optional arguments are forbidden for default select with auto-memoization.'),
         );
       }
 
@@ -135,11 +139,15 @@ class SelectorsFormatRule extends Lint.RuleWalker {
   }
 
   public visitCallExpression(node: ts.CallExpression) {
-    const identifier = (node.expression as ts.Identifier).text;
+    const identifierExpression =
+      ts.isPropertyAccessExpression(node.expression) &&
+      VALID_PROPERTY_NAMES.has(node.expression.name.text)
+        ? node.expression.expression
+        : node.expression;
 
     if (
-      node.expression.kind === ts.SyntaxKind.Identifier &&
-      this.validIdentifiers.has(identifier)
+      ts.isIdentifier(identifierExpression) &&
+      this.validIdentifiers.has(identifierExpression.text)
     ) {
       if (node.arguments.length < 2) {
         return this.addFailureAtNode(
@@ -148,8 +156,10 @@ class SelectorsFormatRule extends Lint.RuleWalker {
         );
       }
 
+      const isDefaultSelect = !ts.isPropertyAccessExpression(node.expression);
+
       this.checkDependenciesNode(node.arguments[0]);
-      this.checkResultFuncNode(node.arguments[1]);
+      this.checkResultFuncNode(node.arguments[1], isDefaultSelect);
     }
 
     super.visitCallExpression(node);

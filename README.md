@@ -180,8 +180,10 @@ To enforce some rules to our [selectors](https://github.com/productboard/pb-fron
    First for readability we want the function to be inlined and not defined outside of selector definition.
    Also, we don't wanna use `function` definition, to avoid possible `this` abuse.
 
-4. **Default arguments in selector function are forbidden.**
-   Unfortunately, JavaScript doesn't play well with default arguments when using memoization on dynamic number of arguments. Therefore we have to disable it to prevent nasty bugs.
+4. **Default/optional arguments in selector function are forbidden.**
+   Unfortunately, JavaScript doesn't play well with default/optional arguments when using memoization on dynamic number of arguments. Therefore we have to disable it to prevent nasty bugs.
+   
+   This is only forbidden for the default `select` with auto-memoization.
 
 5. **All arguments in selector function must be typed.**
    Unfortunately if you skip types on arguments, it just uses implicit `any` (probably because of generics used in `select` definition). It's potentially error-prone, so it's good idea to enforce it.

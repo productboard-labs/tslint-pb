@@ -5,10 +5,15 @@ select(
   () => {},
 );
 
-select(
+select.noMemo(
   [Store],
   () => {},
-  noMemoize,
+);
+
+select.customMemo(
+  [Store],
+  () => {},
+  () => 'key',
 );
 
 select(

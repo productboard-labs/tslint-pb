@@ -13,6 +13,23 @@ select(
   },
 );
 
+select.noMemo(
+  [],
+  ~~  [Dependencies shouldn't be empty. You probably want to define plain function instead of a selector?]
+  (): boolean => {
+    return true;
+  },
+);
+
+select.customMemo(
+  [],
+  ~~  [Dependencies shouldn't be empty. You probably want to define plain function instead of a selector?]
+  (): boolean => {
+    return true;
+  },
+  () => 'key',
+);
+
 const FLUX_DEPENDENCIES = [
   Store,
   selector,
@@ -24,13 +41,38 @@ select(
   () => {},
 );
 
+select.noMemo(
+  FLUX_DEPENDENCIES,
+  ~~~~~~~~~~~~~~~~~  [Dependencies must be defined as array literal.]
+  () => {},
+);
+
+select.customMemo(
+  FLUX_DEPENDENCIES,
+  ~~~~~~~~~~~~~~~~~  [Dependencies must be defined as array literal.]
+  () => {},
+  () => 'key',
+);
+
 const func = () => true;
 
 select(
   [Store],
   func,
   ~~~~  [Function must be defined as arrow function literal.]
-  noMemoize,
+);
+
+select.noMemo(
+  [Store],
+  func,
+  ~~~~  [Function must be defined as arrow function literal.]
+);
+
+select.customMemo(
+  [Store],
+  func,
+  ~~~~  [Function must be defined as arrow function literal.]
+  () => 'key',
 );
 
 select(
@@ -39,16 +81,51 @@ select(
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  [Function must be defined as arrow function literal.]
 );
 
+select.noMemo(
+  [Store],
+  function () { this.trololo = "dont!!" },
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  [Function must be defined as arrow function literal.]
+);
+
+select.customMemo(
+  [Store],
+  function () { this.trololo = "dont!!" },
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  [Function must be defined as arrow function literal.]
+  () => 'key',
+);
+
 select(
   [Store],
   (a: number = 10) => false,
-   ~~~~~~~~~~~~~~            [Default arguments are forbidden.]
+   ~~~~~~~~~~~~~~            [Default arguments are forbidden for default select with auto-memoization.]
+);
+
+select.noMemo(
+  [Store],
+  (a: number = 10) => false,
+);
+
+select.customMemo(
+  [Store],
+  (a: number = 10) => false,
+  () => String(a),
 );
 
 select(
   [Store],
   (a?: number) => false,
-   ~~~~~~~~~~                [Optional arguments are forbidden.]
+   ~~~~~~~~~~                [Optional arguments are forbidden for default select with auto-memoization.]
+);
+
+select.noMemo(
+  [Store],
+  (a?: number) => false,
+);
+
+select.customMemo(
+  [Store],
+  (a?: number) => false,
+  () => typeof a === 'number' ? String(a) : '🤷‍',
 );
 
 select(
@@ -56,4 +133,19 @@ select(
   (abc, xyz) => false,
    ~~~             [All arguments must be typed.]
         ~~~        [All arguments must be typed.]
+);
+
+select.noMemo(
+  [Store],
+  (abc, xyz) => false,
+   ~~~             [All arguments must be typed.]
+        ~~~        [All arguments must be typed.]
+);
+
+select.customMemo(
+  [Store],
+  (abc, xyz) => false,
+   ~~~             [All arguments must be typed.]
+        ~~~        [All arguments must be typed.]
+  (abc, xyz => `${abc}|${xyz}`,
 );
