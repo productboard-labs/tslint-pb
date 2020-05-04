@@ -5,8 +5,7 @@
 
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
-
-const VALID_PROPERTY_NAMES = new Set(['noMemo', 'customMemo']);
+import { getSelectMetadata } from '../utils/selectUtils';
 
 export class Rule extends Lint.Rules.AbstractRule {
   public apply(sourceFile: ts.SourceFile): Array<Lint.RuleFailure> {
@@ -118,14 +117,18 @@ class SelectorsFormatRule extends Lint.RuleWalker {
       if (isDefaultSelect && paramNode.initializer) {
         this.addFailureAtNode(
           paramNode,
-          this.getFormattedError('Default arguments are forbidden for default select with auto-memoization.'),
+          this.getFormattedError(
+            'Default arguments are forbidden for default select with auto-memoization.',
+          ),
         );
       }
 
       if (isDefaultSelect && paramNode.questionToken) {
         this.addFailureAtNode(
           paramNode,
-          this.getFormattedError('Optional arguments are forbidden for default select with auto-memoization.'),
+          this.getFormattedError(
+            'Optional arguments are forbidden for default select with auto-memoization.',
+          ),
         );
       }
 
@@ -139,16 +142,9 @@ class SelectorsFormatRule extends Lint.RuleWalker {
   }
 
   public visitCallExpression(node: ts.CallExpression) {
-    const identifierExpression =
-      ts.isPropertyAccessExpression(node.expression) &&
-      VALID_PROPERTY_NAMES.has(node.expression.name.text)
-        ? node.expression.expression
-        : node.expression;
+    const selectMetadata = getSelectMetadata(node, this.validIdentifiers);
 
-    if (
-      ts.isIdentifier(identifierExpression) &&
-      this.validIdentifiers.has(identifierExpression.text)
-    ) {
+    if (selectMetadata) {
       if (node.arguments.length < 2) {
         return this.addFailureAtNode(
           node,
@@ -156,7 +152,8 @@ class SelectorsFormatRule extends Lint.RuleWalker {
         );
       }
 
-      const isDefaultSelect = !ts.isPropertyAccessExpression(node.expression);
+      const isDefaultSelect =
+        !selectMetadata.hasNoMemo && !selectMetadata.hasCustomMemo;
 
       this.checkDependenciesNode(node.arguments[0]);
       this.checkResultFuncNode(node.arguments[1], isDefaultSelect);
