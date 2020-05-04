@@ -14,6 +14,8 @@ connect(
   () => {},
 )
 
+
+
 select(
   [
     AStore, getA,
@@ -34,4 +36,55 @@ select(
     getA,
   ],
   () => {},
+)
+
+
+
+select.noMemo(
+  [
+    AStore, getA,
+  ],
+  () => {},
+)
+
+select.noMemo(
+  [
+    BStore, AStore, ...weirdMagic,
+  ],
+  () => {},
+)
+
+select.noMemo(
+  [
+    AStore,
+    getA,
+  ],
+  () => {},
+)
+
+
+
+select.customMemo(
+  [
+    AStore, getA,
+  ],
+  () => {},
+  () => 'memoKey',
+)
+
+select.customMemo(
+  [
+    BStore, AStore, ...weirdMagic,
+  ],
+  () => {},
+  () => 'memoKey',
+)
+
+select.customMemo(
+  [
+    AStore,
+    getA,
+  ],
+  () => {},
+  () => 'memoKey',
 )

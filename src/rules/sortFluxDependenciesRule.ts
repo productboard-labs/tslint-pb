@@ -3,16 +3,18 @@
  * All rights reserved.
  */
 
-import * as Lint from "tslint";
-import * as ts from "typescript";
-import { IOptions } from "tslint";
+import * as Lint from 'tslint';
+import * as ts from 'typescript';
+import { IOptions } from 'tslint';
+import { getSelectMetadata } from '../utils/selectUtils';
+import { getConnectMetadata } from '../utils/connectUtils';
 
 export class Rule extends Lint.Rules.AbstractRule {
   public static ERROR = `Dependency array is not sorted correctly!`;
 
   public apply(sourceFile: ts.SourceFile): Array<Lint.RuleFailure> {
     return this.applyWithWalker(
-      new SortFluxDependencies(sourceFile, this.getOptions())
+      new SortFluxDependencies(sourceFile, this.getOptions()),
     );
   }
 }
@@ -25,7 +27,7 @@ const MAX_LINE_LENGTH = 80;
 function getIndentation(node: ts.Node, sourceFile: ts.SourceFile): string {
   const text = sourceFile.text.substr(node.pos, node.getStart() - node.pos);
   const matches = text.match(/([ \t]*)$/);
-  return matches !== null ? matches[1] : "";
+  return matches !== null ? matches[1] : '';
 }
 
 class SortFluxDependencies extends Lint.RuleWalker {
@@ -39,8 +41,8 @@ class SortFluxDependencies extends Lint.RuleWalker {
 
     const configuration = {
       maxLineLength: MAX_LINE_LENGTH,
-      reference: "",
-      ...options.ruleArguments[0]
+      reference: '',
+      ...options.ruleArguments[0],
     } as {
       reference: string;
       maxLineLength: number;
@@ -59,14 +61,14 @@ class SortFluxDependencies extends Lint.RuleWalker {
       // let's apply this rule only on "clean" dependency array. Just the Identifiers, no spreads or magic like that.
       if (
         !(selectorsNode as ts.ArrayLiteralExpression).elements.every(
-          node => node.kind === ts.SyntaxKind.Identifier
+          node => node.kind === ts.SyntaxKind.Identifier,
         )
       ) {
         return;
       }
 
       const dependencyNodes = (selectorsNode as ts.ArrayLiteralExpression).elements.filter(
-        node => node.kind === ts.SyntaxKind.Identifier
+        node => node.kind === ts.SyntaxKind.Identifier,
       ) as Array<ts.Identifier>;
 
       const sortedImportsIdentifiers = [...dependencyNodes]
@@ -75,19 +77,15 @@ class SortFluxDependencies extends Lint.RuleWalker {
 
       if (!dependencyNodes[0]) return;
 
-      const indentation = getIndentation(
-        dependencyNodes[0],
-        this.getSourceFile()
-      );
+      const indentation = getIndentation(dependencyNodes[0], this.getSourceFile());
 
       // Let's help prettier a bit to write nodes in line or in block
       let formatedSortedIdentifiers;
       if (
-        sortedImportsIdentifiers.join().length >
-        this.configuration.maxLineLength
+        sortedImportsIdentifiers.join().length > this.configuration.maxLineLength
       ) {
         formatedSortedIdentifiers = sortedImportsIdentifiers.join(
-          `,\n${indentation}`
+          `,\n${indentation}`,
         );
       } else {
         formatedSortedIdentifiers = sortedImportsIdentifiers.join(`, `);
@@ -96,7 +94,7 @@ class SortFluxDependencies extends Lint.RuleWalker {
       const fixer = Lint.Replacement.replaceFromTo(
         dependencyNodes[0].getStart(),
         dependencyNodes[dependencyNodes.length - 1].getEnd(),
-        formatedSortedIdentifiers
+        formatedSortedIdentifiers,
       );
 
       for (let i = 0; i < dependencyNodes.length; i++) {
@@ -108,9 +106,9 @@ class SortFluxDependencies extends Lint.RuleWalker {
               Rule.ERROR +
                 (this.configuration.reference
                   ? ` ${this.configuration.reference}`
-                  : ""),
-              fixer
-            )
+                  : ''),
+              fixer,
+            ),
           );
         }
       }
@@ -118,13 +116,10 @@ class SortFluxDependencies extends Lint.RuleWalker {
   }
 
   public visitCallExpression(node: ts.CallExpression) {
-    const identifier = (node.expression as ts.Identifier).text;
+    const selectMetadata = getSelectMetadata(node);
+    const connectMetadata = getConnectMetadata(node);
 
-    if (
-      node.expression.kind === ts.SyntaxKind.Identifier &&
-      // support select lib and aso connect called as argument, for instance with 'compose'
-      (identifier === "select" || identifier === "connect")
-    ) {
+    if (selectMetadata || connectMetadata) {
       this.checkSelectors(node);
     }
 

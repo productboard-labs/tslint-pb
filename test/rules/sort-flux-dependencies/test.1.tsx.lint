@@ -7,13 +7,15 @@ connect(
   [
     AlonglonglongStore,
     getLongLongLongA,
-    ~~~~~~~~~~~~~~~~  [Dependency array is not sorted correctly!] 
+    ~~~~~~~~~~~~~~~~  [Dependency array is not sorted correctly!]
     BlonglonglongStore,
     getLongLongLongB,
     getLongLongLongC,
   ],
   () => {},
 )
+
+
 
 select(
   [
@@ -37,4 +39,59 @@ select(
     getA,
   ],
   () => {},
+)
+
+
+
+select.noMemo(
+  [
+    getA,
+    ~~~~  [Dependency array is not sorted correctly!]
+    AStore,
+  ],
+  () => {},
+)
+
+select.noMemo(
+  [
+    BStore, AStore, ...weirdMagic,
+  ],
+  () => {},
+)
+
+select.noMemo(
+  [
+    AStore,
+    getA,
+  ],
+  () => {},
+)
+
+
+
+select.customMemo(
+  [
+    getA,
+    ~~~~  [Dependency array is not sorted correctly!]
+    AStore,
+  ],
+  () => {},
+  () => 'memoKey',
+)
+
+select.customMemo(
+  [
+    BStore, AStore, ...weirdMagic,
+  ],
+  () => {},
+  () => 'memoKey',
+)
+
+select.customMemo(
+  [
+    AStore,
+    getA,
+  ],
+  () => {},
+  () => 'memoKey',
 )
