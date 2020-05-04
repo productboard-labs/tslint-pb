@@ -6,3 +6,19 @@ export default select([show, hide], () => ({
   b: hide(),
   c: NotADependency()
 }))
+
+export default select.noMemo([show, hide], () => ({
+  a: show(),
+  b: hide(),
+  c: NotADependency()
+}))
+
+export default select.customMemo(
+  [show, hide],
+  () => ({
+    a: show(),
+    b: hide(),
+    c: NotADependency()
+  }),
+  () => 'memoKey',
+)

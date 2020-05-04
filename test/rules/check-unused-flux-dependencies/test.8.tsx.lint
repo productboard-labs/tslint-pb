@@ -19,3 +19,47 @@ export default select([anotherSelect], () => {
     magic: anotherSelect(),
   }
 })
+
+
+
+const anotherSelectNoMemo = select.noMemo([show, hide], () => {
+  return {
+    a: show(),
+    b: hide(),
+  }
+})
+
+export default select([anotherSelectNoMemo], () => {
+  return {
+    magic: anotherSelectNoMemo(),
+  }
+})
+
+export default select([anotherSelectNoMemo], () => {
+  return {
+    show: "must go on",
+    magic: anotherSelectNoMemo(),
+  }
+})
+
+
+
+const anotherSelectCustomMemo = select([show, hide], () => {
+  return {
+    a: show(),
+    b: hide(),
+  }
+})
+
+export default select([anotherSelectCustomMemo], () => {
+  return {
+    magic: anotherSelectCustomMemo(),
+  }
+})
+
+export default select([anotherSelectCustomMemo], () => {
+  return {
+    show: "must go on",
+    magic: anotherSelectCustomMemo(),
+  }
+}, () => 'memoKey')

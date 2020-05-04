@@ -3,16 +3,13 @@
  * All rights reserved.
  */
 
-import * as ts from "typescript";
-import * as Lint from "tslint";
-import { IOptions } from "tslint";
+import * as ts from 'typescript';
+import * as Lint from 'tslint';
+import { IOptions } from 'tslint';
+import { getSelectMetadata } from '../utils/selectUtils';
+import { getConnectMetadata } from '../utils/connectUtils';
 
-type TFluxDependency = "store" | "selector";
-
-enum FLUX_FACTORY {
-  CONNECT = "connect",
-  SELECT = "select"
-}
+type TFluxDependency = 'store' | 'selector';
 
 const watchedIdentifiers: { [key: string]: TFluxDependency } = {};
 
@@ -26,7 +23,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 
   public apply(sourceFile: ts.SourceFile): Array<Lint.RuleFailure> {
     return this.applyWithWalker(
-      new NoUnusedDependenciesWalker(sourceFile, this.getOptions())
+      new NoUnusedDependenciesWalker(sourceFile, this.getOptions()),
     );
   }
 }
@@ -45,9 +42,7 @@ const getImports = (node: ts.ImportDeclaration) => {
 
   return [
     ...collectedIdentifiers,
-    ...(namedImports
-      ? namedImports.elements.map(element => element.name.text)
-      : [])
+    ...(namedImports ? namedImports.elements.map(element => element.name.text) : []),
   ];
 };
 
@@ -58,7 +53,7 @@ const addToWatchedIdentifiers = (name: string, type: TFluxDependency) => {
 const addToWatchedIdentifiersFromImportNode = (
   node: ts.ImportDeclaration,
   type: TFluxDependency,
-  onlyDefault?: boolean
+  onlyDefault?: boolean,
 ) => {
   if (onlyDefault) {
     const importClause = node.importClause;
@@ -88,8 +83,8 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
     super(sourceFile, options);
 
     const configuration = {
-      reference: "",
-      ...(options.ruleArguments && options.ruleArguments[0])
+      reference: '',
+      ...(options.ruleArguments && options.ruleArguments[0]),
     } as Configuration;
 
     this.configuration = configuration;
@@ -101,10 +96,8 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
         node.getStart(),
         node.getWidth(),
         text +
-          (this.configuration.reference
-            ? ` ${this.configuration.reference}`
-            : "")
-      )
+          (this.configuration.reference ? ` ${this.configuration.reference}` : ''),
+      ),
     );
   }
 
@@ -116,12 +109,10 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
       ts.isArrayLiteralExpression(dependencyNode)
     ) {
       const selectorsNodesIdentifiers = dependencyNode.elements.filter(
-        ts.isIdentifier
+        ts.isIdentifier,
       );
 
-      const dependencies = selectorsNodesIdentifiers.map(
-        element => element.text
-      );
+      const dependencies = selectorsNodesIdentifiers.map(element => element.text);
 
       if (
         ts.isVariableDeclaration(node.parent) &&
@@ -137,10 +128,7 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
 
         usedDependencies.push(identifier);
 
-        if (
-          watchedIdentifiers[identifier] &&
-          !dependencies.includes(identifier)
-        ) {
+        if (watchedIdentifiers[identifier] && !dependencies.includes(identifier)) {
           this.addIssue(node, Rule.NOT_LISTENING(identifier));
         }
       };
@@ -184,7 +172,7 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
       ts.forEachChild(implementationNode, cb);
 
       const unusedDependencies = dependencies.filter(
-        dependency => !usedDependencies.includes(dependency)
+        dependency => !usedDependencies.includes(dependency),
       );
 
       unusedDependencies.forEach(unusedSelector => {
@@ -195,7 +183,7 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
         if (unusedDependenciesNode) {
           this.addIssue(
             unusedDependenciesNode,
-            Rule.UNUSED_SELECTOR(unusedSelector)
+            Rule.UNUSED_SELECTOR(unusedSelector),
           );
         }
       });
@@ -208,32 +196,23 @@ class NoUnusedDependenciesWalker extends Lint.RuleWalker {
     const moduleName = (node.moduleSpecifier as ts.StringLiteral).text;
 
     if (moduleName.match(/store/i)) {
-      addToWatchedIdentifiersFromImportNode(node, "store", true);
+      addToWatchedIdentifiersFromImportNode(node, 'store', true);
     }
 
     if (moduleName.match(/selectors/i)) {
-      addToWatchedIdentifiersFromImportNode(node, "selector");
+      addToWatchedIdentifiersFromImportNode(node, 'selector');
     }
 
     super.visitImportDeclaration(node);
   }
 
   public visitCallExpression(node: ts.CallExpression) {
-    const identifier = (node.expression as ts.Identifier).text;
+    const selectMetadata = getSelectMetadata(node);
+    const connectMetadata = getConnectMetadata(node);
 
-    if (
-      node.expression.kind === ts.SyntaxKind.Identifier &&
-      (identifier === FLUX_FACTORY.SELECT ||
-        identifier === FLUX_FACTORY.CONNECT)
-    ) {
-      if (
-        identifier === FLUX_FACTORY.SELECT &&
-        node.parent.kind === ts.SyntaxKind.VariableDeclaration
-      ) {
-        const selectorName = ((node.parent as ts.VariableDeclaration)
-          .name as ts.Identifier).text;
-
-        addToWatchedIdentifiers(selectorName, "selector");
+    if (selectMetadata || connectMetadata) {
+      if (selectMetadata && selectMetadata.variableName) {
+        addToWatchedIdentifiers(selectMetadata.variableName, 'selector');
       }
 
       this.checkDependencies(node);

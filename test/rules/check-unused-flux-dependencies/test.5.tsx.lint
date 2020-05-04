@@ -5,3 +5,19 @@ export default select([show], () => ({
   b: hide(),
      ~~~~    [You forgot to listen for the "hide" dependency!]
 }))
+
+export default select.noMemo([show], () => ({
+  a: show(),
+  b: hide(),
+     ~~~~    [You forgot to listen for the "hide" dependency!]
+}))
+
+export default select.customMemo(
+  [show],
+  () => ({
+    a: show(),
+    b: hide(),
+       ~~~~    [You forgot to listen for the "hide" dependency!]
+  }),
+  () => 'memoKey',
+)

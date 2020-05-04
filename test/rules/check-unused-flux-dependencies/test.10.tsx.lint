@@ -8,7 +8,7 @@ const superSelect = select([show, hide], () => {
 })
 
 export default connect([show, hide, superSelect], () => ({
-                                    ~~~~~~~~~~~            [The "superSelect" dependency  is unused. This has performance impact!]
+                                    ~~~~~~~~~~~   [The "superSelect" dependency  is unused. This has performance impact!]
   a: show(),
   b: hide(),
 }))(component);
@@ -18,4 +18,48 @@ export default connect([show, hide], () => ({
   b: hide(),
   b: superSelect()
      ~~~~~~~~~~~   [You forgot to listen for the "superSelect" dependency!]
+}))(component);
+
+
+
+const superSelectNoMemo = select.noMemo([show, hide], () => {
+  return {
+    a: show(),
+    b: hide(),
+  }
+})
+
+export default connect([show, hide, superSelectNoMemo], () => ({
+                                    ~~~~~~~~~~~~~~~~~   [The "superSelectNoMemo" dependency  is unused. This has performance impact!]
+  a: show(),
+  b: hide(),
+}))(component);
+
+export default connect([show, hide], () => ({
+  a: show(),
+  b: hide(),
+  b: superSelectNoMemo()
+     ~~~~~~~~~~~~~~~~~   [You forgot to listen for the "superSelectNoMemo" dependency!]
+}))(component);
+
+
+
+const superSelectCustomMemo = select.customMemo([show, hide], () => {
+  return {
+    a: show(),
+    b: hide(),
+  }
+}, () => 'memoKey')
+
+export default connect([show, hide, superSelectCustomMemo], () => ({
+                                    ~~~~~~~~~~~~~~~~~~~~~   [The "superSelectCustomMemo" dependency  is unused. This has performance impact!]
+  a: show(),
+  b: hide(),
+}))(component);
+
+export default connect([show, hide], () => ({
+  a: show(),
+  b: hide(),
+  b: superSelectCustomMemo()
+     ~~~~~~~~~~~~~~~~~~~~~   [You forgot to listen for the "superSelectCustomMemo" dependency!]
 }))(component);

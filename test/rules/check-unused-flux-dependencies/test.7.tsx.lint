@@ -10,3 +10,27 @@ export default select([show, hide, SuperStore], () => {
     c: swag(),
   }
 })
+
+export default select.noMemo([show, hide, SuperStore], () => {
+  const swag = SuperStore.magic;
+
+  return {
+    a: show(),
+    b: hide(),
+    c: swag(),
+  }
+})
+
+export default select.customMemo(
+  [show, hide, SuperStore],
+  () => {
+    const swag = SuperStore.magic;
+
+    return {
+      a: show(),
+      b: hide(),
+      c: swag(),
+    }
+  },
+  () => 'memoKey',
+)

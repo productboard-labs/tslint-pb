@@ -13,3 +13,35 @@ export default select([], () => {
            ~~~~~~~~~~~~~    [You forgot to listen for the "anotherSelect" dependency!]
   }
 })
+
+
+
+const anotherSelectNoMemo = select.noMemo([show, hide], () => {
+  return {
+    a: show(),
+    b: hide(),
+  }
+})
+
+export default select([], () => {
+  return {
+    magic: anotherSelectNoMemo(),
+           ~~~~~~~~~~~~~~~~~~~    [You forgot to listen for the "anotherSelectNoMemo" dependency!]
+  }
+})
+
+
+
+const anotherSelectCustomMemo = select.customMemo([show, hide], () => {
+  return {
+    a: show(),
+    b: hide(),
+  }
+}, () => 'memoKey')
+
+export default select([], () => {
+  return {
+    magic: anotherSelectCustomMemo(),
+           ~~~~~~~~~~~~~~~~~~~~~~~    [You forgot to listen for the "anotherSelectCustomMemo" dependency!]
+  }
+})
