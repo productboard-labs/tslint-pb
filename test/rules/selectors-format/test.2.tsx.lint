@@ -100,14 +100,31 @@ select(
    ~~~~~~~~~~~~~~            [Default arguments are forbidden for default select with auto-memoization.]
 );
 
+select(
+  [Store],
+  (a = 10) => false,
+   ~~~~~~                    [Default arguments are forbidden for default select with auto-memoization.]
+);
+
 select.noMemo(
   [Store],
   (a: number = 10) => false,
 );
 
+select.noMemo(
+  [Store],
+  (a = 10) => false,
+);
+
 select.customMemo(
   [Store],
   (a: number = 10) => false,
+  () => String(a),
+);
+
+select.customMemo(
+  [Store],
+  (a = 10) => false,
   () => String(a),
 );
 
