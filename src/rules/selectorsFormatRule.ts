@@ -131,8 +131,7 @@ class SelectorsFormatRule extends Lint.RuleWalker {
           ),
         );
       }
-
-      if (!paramNode.type) {
+      if (!paramNode.type && !paramNode.initializer) {
         this.addFailureAtNode(
           paramNode,
           this.getFormattedError('All arguments must be typed.'),
